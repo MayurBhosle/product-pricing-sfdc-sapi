@@ -1,0 +1,26 @@
+#%RAML 1.0 ResourceType
+
+get?:
+  responses:
+    200:
+      body:
+        application/json:
+          type: <<responseType>>
+          example: <<responseExample>>
+
+put?:
+  body:
+    application/json:
+      type: <<updateRequestType>>
+      example: <<updateExample>>
+  responses:
+    200:
+      body:
+        application/json:
+          type: <<responseType>>
+          example: <<responseExample>>
+
+delete?:
+  responses:
+    204:
+      description: Successfully deleted

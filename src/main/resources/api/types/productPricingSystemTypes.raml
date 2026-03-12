@@ -1,0 +1,65 @@
+#%RAML 1.0 Library
+usage:
+types:
+
+  ProductId:
+    type: string
+    maxLength: 12
+    #pattern: ^P[0-9]{11}$
+
+  ProductCreateRequest:
+    type: object
+    properties:
+      productId: ProductId
+      productName: string
+      productCode: string
+      description?: string
+      currencyCode:
+        type: string
+        default: USD
+      productPrice:
+        type: number
+        format: double
+        multipleOf: 0.01
+
+  ProductUpdateRequest:
+    type: object
+    properties:
+      productName?: string
+      description?: string
+      currencyCode?: string
+      productPrice?:
+        type: number
+        format: double
+        multipleOf: 0.01
+
+  ProductResponse:
+    type: object
+    properties:
+      productId: ProductId
+      productName: string
+      productCode: string
+      description?: string
+      currencyCode: string
+      productPrice:
+        type: number
+        format: double
+        multipleOf: 0.01
+      createdDate: datetime
+      lastModifiedDate: datetime
+
+  ProductListResponse:
+    type: object
+    properties:
+      totalRecords: integer
+      limit: integer
+      offset: integer
+      data: ProductResponse[]
+
+  ErrorResponse:
+    type: object
+    properties:
+      errorCode: string
+      message: string
+      timestamp: datetime
+      correlationId?: string

@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_8708365c_ce13_4c02_9545_12cb5859edb6_Output_Variables_limit = Any
+

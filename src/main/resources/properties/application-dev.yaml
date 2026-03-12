@@ -1,0 +1,11 @@
+api:
+  key: "AIzaSyDaGmWKa4JsXZ-HjGw7ISLn_3na"
+http:
+  port: "8082"
+  timeOut: "7200"
+
+salesforce:
+  username: "![RwzdtU5tKIN4+j3QwkBTm56SUW45Cvg4bKoWCDQ34ik=]"
+  password: "![KsDNtyUg77hDXoUJFhJw+vLVQaDe0VSWmkcKUJ3QM1Q=]"
+  securityToken: "![sri7XydCKFcYjgYP6JTgVowpAOI1MODT+DrvGkRG6Xo=]"
+  authUrl: "![fWChDmITN5MqN9Ry9ZoQQvThMa75wuT8cUg6ZGSaLDfQCpevBkU40jl39GczOwUCsl8EGuDE2RdRxb5p6DzU7Q==]"

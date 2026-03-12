@@ -1,0 +1,17 @@
+{
+  "totalRecords": 1,
+  "limit": 20,
+  "offset": 0,
+  "data": [
+    {
+      "productId": "P00000000001",
+      "productName": "Laptop",
+      "productCode": "XYZ12345",
+      "description": "Business Laptop",
+      "currencyCode": "INR",
+      "productPrice": 83250.50,
+      "createdDate": "2024-01-10T10:15:30Z",
+      "lastModifiedDate": "2024-01-12T11:20:45Z"
+    }
+  ]
+}

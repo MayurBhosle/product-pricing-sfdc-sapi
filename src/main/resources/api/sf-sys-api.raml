@@ -1,0 +1,84 @@
+#%RAML 1.0
+title: sf-sys-api
+version: 1.0
+baseUri: v1
+mediaType: application/json
+protocols: [ HTTPS ]
+securedBy: [client-id-enforcement]
+
+
+description: |
+  System API for Salesforce Product2 integration.
+  Supports create, update, delete, and retrieve products with optional
+  currency conversion using external Currency Conversion System API.
+
+uses:
+  productTypes: types/productPricingSystemTypes.raml
+securitySchemes:
+  client-id-enforcement: !include Security/securityScheme.raml
+
+resourceTypes:
+  collection: !include resourceTypes/collection.raml
+  member: !include resourceTypes/member.raml
+
+traits:
+  pageable: !include traits/pageable.raml
+  currency: !include traits/currency.raml
+  badRequest: !include traits/badRequest.raml
+  notFound: !include traits/notFound.raml
+  immutableFieldUpdate: !include traits/immutableFieldUpdate.raml
+  systemErrors: !include traits/systemErrors.raml
+  
+
+/products:
+
+  displayName: Salesforce Product2 Collection
+
+  type:
+    collection:
+      postRequestType: productTypes.ProductCreateRequest
+      postResponseType: productTypes.ProductResponse
+      getResponseType: productTypes.ProductListResponse
+      postExample: !include examples/productCreateRequest.json
+      getExample: !include examples/productListResponse.json
+
+  post:
+    description: Create Product in Salesforce Product2 object.
+    is: [ badRequest, systemErrors ]
+
+  get:
+    description: |
+      Retrieve Product inventory from Salesforce.
+      Optional currencyCode query parameter will convert price
+      using Currency Conversion System API.
+    is: [ pageable, currency, badRequest, systemErrors ]
+
+
+/products/{productId}:
+
+  displayName: Salesforce Product By ExternalId
+
+  uriParameters:
+    productId:
+      description: ExternalId stored in Salesforce (max 12 chars)
+      type: productTypes.ProductId
+      example: P00000000001
+
+  type:
+    member:
+      updateRequestType: productTypes.ProductUpdateRequest
+      responseType: productTypes.ProductResponse
+      updateExample: !include examples/productUpdateRequest.json
+      responseExample: !include examples/productResponse.json
+
+  get:
+    description: Retrieve product by ExternalId.
+    is: [ notFound, systemErrors ]
+
+  put:
+    description: Update product except ProductCode (immutable).
+    is: [ badRequest, immutableFieldUpdate, notFound, systemErrors ]
+
+  delete:
+    description: Delete product by ExternalId.
+    is: [ notFound, systemErrors ]

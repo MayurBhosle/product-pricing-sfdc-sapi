@@ -1,0 +1,10 @@
+{
+  "modelVersion": "1.0.0",
+  "name": "product-pricing-sfdc-sapi",
+  "version": "1.0.0",
+  "source": "file:///c:/Users/mayur/OneDrive/Documents/Salesforce%20Use%20Case/Salesforce%20case%20study/product-pricing-sfdc-sapi/product-pricing-sfdc-sapi/pom.xml",
+  "natures": [
+    "mule"
+  ],
+  "components": []
+}

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <apikit:config name="sf-sys-api-config" api="sf-sys-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="sf-sys-api-main">
+        <http:listener config-ref="sf-sys-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]" reasonPhrase="#[error.detailedDescription]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="sf-sys-api-config" />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="sf-sys-api-console">
+        <http:listener config-ref="sf-sys-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="sf-sys-api-config" />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="put:\products\(productId):application\json:sf-sys-api-config" doc:id="2eb2eefc-a4f2-4919-95e2-85898d2b5773">
+		<set-variable value="#[attributes.headers['x-correlation-id']]" doc:name="Set correlationId" doc:id="fe53a4b2-7265-4865-af74-67f4eabeecc1" variableName="correlationId" />
+		<logger level="INFO" doc:name="Logger" doc:id="0dbb3603-f5ff-4397-8a3f-d08c693368ce" message='#["Started update products by Id - SAPI - " ++ vars.correlationId]' />
+		<flow-ref doc:name="Flow Reference" doc:id="5dd0b230-6d24-4064-ae5a-906d04023269" name="updateProduct_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b934f1ef-ab26-41be-99b0-9a74908c4dd9" message='#["Ended update products by Id - SAPI - " ++ vars.correlationId]' />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="delete:\products\(productId):sf-sys-api-config">
+		<logger level="INFO" doc:name="Logger" doc:id="373f808a-5268-46f4-aa30-81e713c8795d" message='#["Started delete products by Id - SAPI"]' />
+		<flow-ref doc:name="Flow Reference" doc:id="7e97532e-27af-4b09-9ab6-2402449ea133" name="deleteProductById"/>
+		<logger level="INFO" doc:name="Logger" doc:id="906cb0b2-c30a-4e43-8522-ebb493d8e40b" message='#["Started delete products by Id - SAPI"]' />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="get:\products:sf-sys-api-config">
+		<set-variable value="#[attributes.headers['x-correlation-id']]" doc:name="Set correlationId" doc:id="464efd1e-3e7a-4f33-942d-962d0d1a4459" variableName="correlationId" />
+		<logger level="INFO" doc:name="Logger" doc:id="07d060f7-3053-406c-8038-cf45dd4fa781" message='#["Started get all products - SAPI - " ++ vars.correlationId]' />
+		<flow-ref doc:name="Flow Reference" doc:id="8900deb3-b07a-4bd6-a534-88f84d5786e6" name="getAllProduct_Flow" />
+		<logger level="INFO" doc:name="Logger" doc:id="855044bb-21b6-41d2-b568-17ad779f8449" message='#["Ended get all products - SAPI - " ++ vars.correlationId]' />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="get:\products\(productId):sf-sys-api-config">
+		<set-variable value="#[attributes.headers['x-correlation-id']]" doc:name="Set correlationId" doc:id="cf6fec0f-e2eb-4b2c-889c-4b42692728c7" variableName="correlationId" />
+		<logger level="INFO" doc:name="Logger" doc:id="4fc2665c-6f33-4859-9159-eed5dd6e2909" message='#["Started get products by Id - SAPI - " ++ vars.correlationId]' />
+		<flow-ref doc:name="Flow Reference" doc:id="d1d52f74-b136-41e5-9481-ded5bbd05d77" name="getProductById_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d0c6e0c1-0421-4abc-9fb5-2daa185a55cf" message='#["Ended get products by Id - SAPI - " ++ vars.correlationId]' />
+		<error-handler ref="global-error-handler" />
+    </flow>
+    <flow name="post:\products:application\json:sf-sys-api-config">
+		<set-variable value="#[attributes.headers['x-correlation-id']]" doc:name="Set correlationId" doc:id="2e88acc9-1285-42f4-96a0-77905cab6218" variableName="correlationId" />
+		<logger level="INFO" doc:name="Logger" doc:id="987c8fd4-ada5-48d3-a9d4-68265883b719" message='#["Started create products - SAPI - " ++ vars.correlationId]' />
+		<flow-ref doc:name="Flow Reference" doc:id="6c95fe9b-e8b3-448f-b07a-42847710d9e7" name="createProduct_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="660c91ca-9aa5-41bf-afa6-e542479c105c" message='#["Ended create products - SAPI - " ++ vars.correlationId]' />
+		<error-handler ref="global-error-handler" />
+    </flow>
+</mule>

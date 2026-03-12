@@ -1,0 +1,9 @@
+{
+  "productId": "P00000000001",
+  "productName": "Laptop",
+  "productCode": "XYZ12345",
+  "currencyCode": "USD",
+  "productPrice": 1200.00,
+  "createdDate": "2025-02-18T10:30:00Z",
+  "lastModifiedDate": "2025-02-18T10:30:00Z"
+}

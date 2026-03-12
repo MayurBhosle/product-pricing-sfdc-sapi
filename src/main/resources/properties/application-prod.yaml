@@ -1,0 +1,4 @@
+http:
+  path: "/api/*"
+  host: "http"
+  port: "8081"

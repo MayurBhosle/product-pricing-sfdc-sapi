@@ -1,0 +1,8 @@
+{
+  "productId": "P00000000001",
+  "productName": "Laptop",
+  "productCode": "XYZ12345",
+  "description": "Business Laptop",
+  "currencyCode": "USD",
+  "productPrice": 1000.00
+}

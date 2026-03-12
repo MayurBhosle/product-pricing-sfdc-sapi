@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="createProduct_Flow" doc:id="9c440653-324c-440f-a864-75a6fdb9fecd" >
+		<logger level="INFO" doc:name="Flow Start - Logger" doc:id="3cc8b7a4-b5ff-484f-86eb-d7adee42f794" message='#["Create Product Flow - START"]'/>
+		<ee:transform doc:name="Transform Message" doc:id="c8c4791d-5575-4a60-9eea-5a123966bc1c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+  ExternalId: payload.productId,
+  Name: payload.productName,
+  ProductCode: payload.productCode,
+  Description: payload.description,
+  CurrencyCode__c: payload.currencyCode default "USD",
+  ProductPrice__c: 
+      (payload.productPrice as Number {format: "##.00"})
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Product2" doc:name="Create Product" doc:id="36dedaa1-5922-4bbf-8e61-be679c8b515d" config-ref="SFDC_Config">
+			<salesforce:records ><![CDATA[#[[payload]]]]></salesforce:records>
+		</salesforce:create>
+		<ee:transform doc:name="Transform Message" doc:id="53c76d45-497b-4cfe-b024-afeba6db6321" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var item = payload.items[0]
+---
+if (payload.successful and item.successful)
+{
+  status: "SUCCESS",
+  message: "Product created successfully in Salesforce.",
+  productId: item.id
+}
+else
+{
+  status: "FAILED",
+  message: item.payload.errors,
+  errorDetails: item.payload.errors
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Flow End-Logger" doc:id="191c2067-6a50-4184-ad66-b6f89ce98fe9" message='#["Create Product Flow - END - " ++ vars.correlationId]'/>
+	</sub-flow>
+	<sub-flow name="getAllProduct_Flow" doc:id="912fda07-5fe8-4a30-93a5-16c902e9edcc" >
+		<logger level="INFO" doc:name="Flow Start - Logger" doc:id="4bec816c-af22-4ad5-8ecd-87894b9264b4" message='#["Get All Products Flow - START - " ++ vars.correlationId]'/>
+		<ee:transform doc:name="Set Limit &amp; Offset" doc:id="725047ef-d35d-415e-b6b8-7867a951c6f3" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="offset" ><![CDATA[attributes.queryParams.offset]]></ee:set-variable>
+				<ee:set-variable variableName="limit" ><![CDATA[attributes.queryParams.limit]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<set-payload value='#[%dw 2.0&#10;output application/json&#10;var limit = vars.limit&#10;var offset = vars.offset&#10;---&#10;"SELECT Id,&#10;        ExternalId,&#10;        Name,&#10;        ProductCode,&#10;        Description,&#10;        CurrencyCode__c,&#10;        ProductPrice__c&#10; FROM Product2&#10; ORDER BY CreatedDate DESC&#10; LIMIT " ++ limit ++&#10; " OFFSET " ++ offset]' doc:name="Set SOQL Query" doc:id="3c2a6bb0-c11b-439f-a265-fe23f2f3b119" />
+		<flow-ref doc:name="Flow Reference" doc:id="20b40403-c2b7-4c27-9c49-7b2e6f011602" name="SFQueryFlow"/>
+		<ee:transform doc:name="Transform Message" doc:id="af252f02-2e6a-42af-8a38-94fa80777c7a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Flow End-Logger" doc:id="4aedd28d-1541-4e34-9e25-63d45ad8102f" message='#["Get All Products Flow - END - " ++ vars.correlationId]' />
+	
+</sub-flow>
+	<sub-flow name="getProductById_Flow" doc:id="8708365c-ce13-4c02-9545-12cb5859edb6" >
+		<logger level="INFO" doc:name="Flow Start - Logger" doc:id="d030e26f-5c95-461c-88b1-d77fd06bef17" message='#["Get ProductsById Flow - START "]' />
+		<set-variable value="#[attributes.uriParams.productId]" doc:name="productId" doc:id="3a4ebf42-61c8-48a4-bb1e-97c54abcc8fe" variableName="productId" />
+		<set-payload value="#[%dw 2.0&#10;output text/plain&#10;---&#10;'SELECT Id,&#10;        ExternalId,&#10;        Name,&#10;        Description,&#10;        CurrencyCode__c,&#10;		ProductPrice__c&#10; FROM Product2&#10; WHERE ExternalId = \'' ++ vars.productId ++ '\'']" doc:name="Set Payload" doc:id="3ed8c180-1912-4a9c-83c6-bb816b097969" />
+		<flow-ref doc:name="Flow Reference" doc:id="e52093f6-e3fc-448e-8326-83aaf4ae028e" name="SFQueryFlow"/>
+		<!-- [STUDIO:"getByIdQuery"]<salesforce:query doc:name="getByIdQuery" doc:id="2fdaadf4-83cf-4e39-b65e-7ea747d6f774" config-ref="SFDC_Config">
+			<salesforce:salesforce-query ><![CDATA[#[payload&#93;&#93;&#93;></salesforce:salesforce-query>
+		</salesforce:query> [STUDIO] -->
+		<logger level="INFO" doc:name="Flow Process - Logger" doc:id="69cc9bc5-7b1c-4330-af37-7574fb53a329" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="337554bf-4b8f-4d2a-9947-c8890c7d8768" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Flow End-Logger" doc:id="9b42b7c7-4721-4cb5-a12f-72d1fcfe2ec2" message='#["Get ProductsById Flow - END"]' />
+		
+</sub-flow>
+	<sub-flow name="updateProduct_Flow" doc:id="2a5483b8-7aae-43a6-ab17-e7a245491302" >
+		<logger level="INFO" doc:name="Flow Start - Logger" doc:id="85c987fe-1370-4b7f-84ff-9e3666b4cce7" message='#["Update ProductsById Flow - START - " ++ vars.correlationId]' />
+		<set-variable value="#[attributes.uriParams.productId]" doc:name="productId" doc:id="0349e084-9569-4552-ab25-ef2ddc0820ce" variableName="productId" />
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="83e02917-c0bd-4948-8ebd-f2fa93ea889a" variableName="requestBody"/>
+		<set-payload value="#[%dw 2.0&#10;output text/plain&#10;---&#10;'SELECT Id,&#10;        ExternalId,&#10;        Name,&#10;        Description,&#10;        CurrencyCode__c&#10; FROM Product2&#10; WHERE ExternalId = \'' ++ vars.productId ++ '\'']" doc:name="Set Payload" doc:id="894b1dc7-18f3-4384-b0f5-7bb61c9ee57a" />
+		<flow-ref doc:name="Flow Reference" doc:id="9b74a4c1-e0f0-4924-a978-7aae69714dba" name="SFQueryFlow"/>
+		<salesforce:query doc:name="getQuery" doc:id="0b93b172-6df4-42d9-ad62-f1f7ec07d167" config-ref="SFDC_Config">
+			<salesforce:salesforce-query><![CDATA[#[payload]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="7abda87d-8bc0-491e-98b8-8f8e93882d73">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+[
+    {
+        Id: payload[0].Id,
+        Name: vars.requestBody.productName,
+        Description: vars.requestBody.description,
+        CurrencyCode__c: vars.requestBody.currencyCode,
+        ProductPrice__c: vars.requestBody.productPrice
+    }
+]
+
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:update doc:name="Update" doc:id="e14c772b-2212-4dc2-8d55-70bd76c13797" config-ref="SFDC_Config" type="Product2">
+		</salesforce:update>
+		<ee:transform doc:name="Transform Message" doc:id="a4e6f903-f13e-4c6e-8533-95cbe73acda4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(payload.successful==true){"message":"Product updated"}
+else{"message":"Not updated"}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Flow End-Logger" doc:id="d58c50c3-e9e0-43d5-8d3b-8a7ce7c76b5a" message='#["Update ProductsById Flow - END - " ++ vars.correlationId]' />
+	
+</sub-flow>
+	<sub-flow name="deleteProductById" doc:id="7c853a17-4903-483b-8ab4-c4509217b053">
+    
+    
+    <logger level="INFO" doc:name="Flow Start - Logger" doc:id="7ca4534e-15d7-4f41-b27b-c9800c538b33" message='#["Delete ProductsById Flow - START"]' />
+		<set-variable value="#[attributes.uriParams.productId]" doc:name="productId" doc:id="32117dce-1d32-4414-91eb-aeb4646ca843" variableName="productId"/>
+		<set-payload value="#[%dw 2.0&#10;output text/plain&#10;---&#10;'SELECT Id,&#10;        ExternalId,&#10;        Name,&#10;        Description,&#10;        CurrencyCode__c&#10; FROM Product2&#10; WHERE ExternalId = \'' ++ vars.productId ++ '\'']" doc:name="Set Payload" doc:id="2b9d3ce5-f3dd-436e-b5b1-3ea2bab84092" />
+		<salesforce:query doc:name="getQuery" doc:id="38000999-020a-4460-b00d-f5a8b83bd2cc" config-ref="SFDC_Config">
+			<salesforce:salesforce-query><![CDATA[#[payload]]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="22def109-f81a-4fa5-b49d-43e958ebe385" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map $.Id]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:delete doc:name="Delete" doc:id="4bd8b137-6524-4be1-aed3-e69655f2c933" config-ref="SFDC_Config">
+		</salesforce:delete>
+		<logger level="INFO" doc:name="Flow End-Logger" doc:id="930b8e7f-d2da-4e1c-9d5a-5afd2249ffec" message='#["Delete ProductsById Flow - END"]' />
+
+</sub-flow>
+	<sub-flow name="SFQueryFlow" doc:id="1cde1145-001d-4585-bb6f-0275d560abac" >
+		<logger level="INFO" doc:name="Logger" doc:id="e8bdcea0-2c94-4e10-8aa4-1f333ecf448a" message='#["Querying salesforce to get products"]'/>
+		<salesforce:query doc:name="GetProducts" doc:id="80a81d4a-f425-4e38-8425-632b23b632d9" config-ref="SFDC_Config" >
+			<salesforce:salesforce-query ><![CDATA[#[payload]]]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[{
+  limit: (attributes.queryParams.limit default 10) as Number,
+  offset: (attributes.queryParams.offset default 0) as Number
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<logger level="INFO" doc:name="Logger" doc:id="7aba647c-f289-4842-b299-412538b062b1" message='#["Retreived " ++ sizeOf(payload) ++ " products from salesforce."]'/>
+	</sub-flow>
+	
+		
+
+</mule>
